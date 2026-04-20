@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
+.#*
+
+# Node / tooling artifacts (in case docs pull node deps later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python virtualenv artifacts (same reason)
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Scratch files (audit scratch buffers etc. should never be committed)
+.repo-audit-findings.md
+*.scratch.md
+
+# Local testing / dogfooding — if harness-steward is ever used on itself,
+# sediment at the repo root should NOT be committed to the shipped bundle.
+# But the worked example's .harness/ IS part of the distribution (it's
+# the whole point of the example), so scope the ignore to repo root only.
+/.harness/

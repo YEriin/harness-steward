@@ -1,0 +1,33 @@
+{
+  "name": "harness-steward",
+  "description": "Community marketplace hosting the harness-steward plugin.",
+  "owner": {
+    "name": "YEriin",
+    "url": "https://github.com/YEriin"
+  },
+  "plugins": [
+    {
+      "name": "harness-steward",
+      "description": "Project-level AI coding discipline for Claude Code and Codex. Nine skills that activate at key development moments — requirement evaluation, implementation scoping, post-task review, debug, feature end, periodic audit — consulting project-specific sediment (architectural intent, lessons-log) to keep work aligned.",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "YEriin",
+        "url": "https://github.com/YEriin"
+      },
+      "homepage": "https://github.com/YEriin/harness-steward",
+      "repository": "https://github.com/YEriin/harness-steward",
+      "license": "MIT",
+      "keywords": [
+        "skills",
+        "ai-coding",
+        "harness-steward",
+        "harness-engineering",
+        "macro-loop",
+        "audit",
+        "bootstrap",
+        "discipline"
+      ]
+    }
+  ]
+}

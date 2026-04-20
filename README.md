@@ -86,19 +86,29 @@ The bundle never writes to itself. Your project doesn't depend on the bundle at 
 
 The manifest at `.claude-plugin/plugin.json` + the marketplace listing at `.claude-plugin/marketplace.json` make this a standard Claude Code plugin install.
 
-### For Codex
+### Via Codex marketplace
 
-Codex's skill directory is `~/.agents/skills/`. Since Codex doesn't use Claude's plugin system, install skills directly:
+Codex has its own plugin format. This repository now exposes a Codex marketplace at `.agents/plugins/marketplace.json` and a Codex plugin at `plugins/harness-steward/.codex-plugin/plugin.json`.
+
+For a published repo:
 
 ```bash
-# After cloning this repo to ~/harness-steward/
-for dir in ~/harness-steward/skills/*/; do
-  name=$(basename "$dir")
-  ln -sfn "$dir" ~/.agents/skills/"$name"
-done
+codex marketplace add YEriin/harness-steward
 ```
 
-Note: direct-skill install means references to `templates/` and `references/` within SKILL.md files won't resolve as relative paths. Either accept the light degradation, or clone the whole bundle to a known location and tell Codex where it is via `AGENTS.md`.
+Then install `harness-steward` from Codex's plugin UI.
+
+For local development against a clone of this repository:
+
+```bash
+codex marketplace add /absolute/path/to/harness-steward
+```
+
+This preserves bundle structure, so skills that rely on `templates/` and `references/` continue to work.
+
+### Direct skill install for Codex (fallback only)
+
+Codex also supports user-level skills in `~/.agents/skills/`, but this bundle is not designed to be fully installed that way. Several skills depend on bundle-relative assets in `templates/` and `references/`, so direct skill install is a degraded mode suitable only if you knowingly want the asset-free subset of skills.
 
 ### Local development (before publishing)
 
@@ -117,6 +127,12 @@ done
 mkdir -p ~/.claude/plugins/cache/local
 ln -sfn ~/harness-steward ~/.claude/plugins/cache/local/harness-steward
 # Then add an entry to ~/.claude/plugins/installed_plugins.json — see CONTRIBUTING.md
+```
+
+For Codex local development, prefer:
+
+```bash
+codex marketplace add /absolute/path/to/harness-steward
 ```
 
 ## Quick start

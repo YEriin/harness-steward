@@ -11,7 +11,7 @@ When you've just learned something worth not losing, this skill decides **how to
 
 **Most lessons should NOT become permanent rules.** The default destination for a lesson is a dated entry in `.harness/lessons-log.md`. Promotion to a permanent rule (project `CLAUDE.md`) must be earned — by recurrence, by impossibility of structural fix, and by surviving the attention-dilution test.
 
-This skill exists because the default path ("I'll just add a rule") is what creates rule sprawl, which destroys the value of all existing rules (see `references/rule-memory-management.md`).
+This skill exists because the default path ("I'll just add a rule") is what creates rule sprawl, which destroys the value of all existing rules (see `../../references/rule-memory-management.md`).
 
 ## Step 1 — Capture the lesson
 

@@ -1,0 +1,41 @@
+{
+  "name": "harness-steward",
+  "version": "0.1.0",
+  "description": "Project-level AI coding discipline for Claude Code and Codex. Nine skills that activate at key development moments and consult project-specific sediment to keep work aligned.",
+  "author": {
+    "name": "YEriin",
+    "url": "https://github.com/YEriin"
+  },
+  "homepage": "https://github.com/YEriin/harness-steward",
+  "repository": "https://github.com/YEriin/harness-steward",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "ai-coding",
+    "harness-steward",
+    "harness-engineering",
+    "macro-loop",
+    "audit",
+    "bootstrap",
+    "discipline"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Harness Steward",
+    "shortDescription": "Project-aware coding discipline for Codex",
+    "longDescription": "Nine project-level skills for requirement evaluation, implementation scoping, task review, debugging with history, lesson capture, and periodic audits across AI-driven codebases.",
+    "developerName": "YEriin",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/YEriin/harness-steward",
+    "defaultPrompt": [
+      "Audit this repo's harness for drift and stale rules.",
+      "Review this completed task against project sediment before commit.",
+      "Load project context before we start implementing this feature."
+    ],
+    "brandColor": "#0F766E"
+  }
+}

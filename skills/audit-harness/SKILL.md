@@ -49,7 +49,7 @@ Rules mentioning tools/frameworks/patterns the project doesn't use (inspect `pac
 ### 1f. Project Context pointers
 Does `CLAUDE.md` reference `.harness/architectural-intent.md` and `.harness/lessons-log.md`? If either is missing → flag **MISSING-CONTEXT-POINTERS**. Without these pointers, Claude does not discover the sediment files during regular project work (only when a harness-steward skill is explicitly invoked), which defeats the purpose of maintaining them.
 
-Remediation: propose adding the **Project Context** section from `templates/claude-md-minimal.template.md` to the top of `CLAUDE.md`.
+Remediation: propose adding the **Project Context** section from `../../templates/claude-md-minimal.template.md` to the top of `CLAUDE.md`.
 
 ## Check 2 — architectural-intent drift
 

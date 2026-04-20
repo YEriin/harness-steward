@@ -40,7 +40,7 @@ Detect current state (read-only; don't write anything yet):
 
 Unlike `bootstrap-new-project`, the project already exists — you're helping the user articulate what's **already there**, not what's planned.
 
-Ask the 4 sections (same as `references/writing-architectural-intent.md`), framed for existing state:
+Ask the 4 sections (same as `../../references/writing-architectural-intent.md`), framed for existing state:
 
 1. *"In 2-3 sentences, what IS this system today?"* — describe current reality, not aspiration
 2. *"What is it explicitly NOT, based on what you've been rejecting?"* — hard boundaries you've defended
@@ -49,7 +49,7 @@ Ask the 4 sections (same as `references/writing-architectural-intent.md`), frame
 
 **If existing architectural docs are found**, read them and offer: *"Section X in your existing ARCHITECTURE.md is close to what goes here. Let me transcribe, then we refine if needed."* **Don't invent content**; use existing words where possible, prompt for missing parts.
 
-Write to `.harness/architectural-intent.md` (use `templates/architectural-intent.template.md` as skeleton).
+Write to `.harness/architectural-intent.md` (use `../../templates/architectural-intent.template.md` as skeleton).
 
 ### 1b. Lessons log — initialize with adoption entry
 
@@ -100,7 +100,7 @@ Unlike `audit-harness` which emits a findings report, this Phase emits a **triag
 
 **Do NOT edit `CLAUDE.md` yourself.** User reviews, user executes the edits. If the user asks for implementation help in a follow-up, that's a separate request — not within this skill's default behavior.
 
-If **no CLAUDE.md existed**: seed from `templates/claude-md-minimal.template.md` (same as `bootstrap-new-project` Phase 3c). Do not add project-specific rules yet — let them earn their place via recurrence.
+If **no CLAUDE.md existed**: seed from `../../templates/claude-md-minimal.template.md` (same as `bootstrap-new-project` Phase 3c). Do not add project-specific rules yet — let them earn their place via recurrence.
 
 ## Phase 3 — Structural foundation suggestions (propose, don't create)
 
@@ -121,7 +121,7 @@ Give concrete commands. Note explicitly: *"if a suggested mechanism already exis
 Same as `bootstrap-new-project` Phase 5, plus adoption-specific:
 
 1. **Schedule first macro loop** — run `audit-harness` and `audit-repo-hygiene` within 1-2 weeks. **Expect a long list of findings**; this is normal for newly-adopted projects.
-2. **Solo-coding slot** — 3-5 hours/week without AI. See `references/developer-discipline.md`.
+2. **Solo-coding slot** — 3-5 hours/week without AI. See `../../references/developer-discipline.md`.
 3. **Read every diff**.
 4. **Invoke `extract-lesson`** after every feature — especially in the first month, when adoption-specific lessons surface rapidly.
 

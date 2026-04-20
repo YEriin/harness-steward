@@ -27,7 +27,7 @@ If #3 fails: **STOP**. The Day 0 doc can't be written without this. Ask them to 
 
 Write architectural intent through interactive Q&A. **You ask, they answer, you transcribe.** Do not invent content — AI can help articulate once they have thoughts; AI cannot originate architectural judgment.
 
-Cover four sections (see `references/writing-architectural-intent.md` for full guidance):
+Cover four sections (see `../../references/writing-architectural-intent.md` for full guidance):
 
 1. **What this system IS** — *"In 2-3 sentences, what is this project's central purpose?"*
 2. **What this system is NOT** — *"What are 3 explicit boundaries? Each is a 'we don't do X' that prevents scope creep."*
@@ -38,7 +38,7 @@ If the user struggles with a section, offer: *"We can leave this as a `<FILL IN>
 
 **Don't fill in for them.** The document loses all value when you write what you think they should want.
 
-Use `templates/architectural-intent.template.md` as the skeleton.
+Use `../../templates/architectural-intent.template.md` as the skeleton.
 
 ## Phase 3 — Seed sediment
 
@@ -65,7 +65,7 @@ Chronological record of project-specific lessons. Managed by the `extract-lesson
 ```
 
 ### 3c. `CLAUDE.md` (project root)
-From `templates/claude-md-minimal.template.md`. **Do not add project-specific rules yet** — they should earn their place via recurrence, not Day 0 speculation. Leave the `## Project-specific` section empty.
+From `../../templates/claude-md-minimal.template.md`. **Do not add project-specific rules yet** — they should earn their place via recurrence, not Day 0 speculation. Leave the `## Project-specific` section empty.
 
 The only acceptable Day 0 exception: one "cannot forget" invariant derivable directly from the architectural intent (e.g., if intent says "we don't persist PII," a rule `"never log raw user objects"` is fair). When in doubt, skip it.
 
@@ -86,7 +86,7 @@ Do NOT build the hooks automatically. That crosses the "bundle never writes stru
 End with explicit reminders of discipline harness cannot enforce. Pick from the list; tailor to context. **Do not skip this phase** — it's how the user remembers Layer 5 is not harness's job.
 
 1. **Weekly macro loop** — schedule `audit-harness` + `audit-repo-hygiene` on a recurring slot (Friday PM, start of sprint, whatever fits your cadence).
-2. **Solo-coding slot** — 3-5 hours per week without AI. Preserves Layer 5 judgment. See `references/developer-discipline.md`.
+2. **Solo-coding slot** — 3-5 hours per week without AI. Preserves Layer 5 judgment. See `../../references/developer-discipline.md`.
 3. **Read every diff** — don't let AI summaries replace actually reading the code. Especially early in project when patterns are being set.
 4. **After every feature** — invoke `extract-lesson` before starting the next. Prevents Layer 4 lesson evaporation.
 

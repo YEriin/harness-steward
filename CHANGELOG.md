@@ -21,9 +21,8 @@ Each mapped to one of two structural gaps — no post-scan verification pass, sc
   - **Self-match**: `RULE-STALE` excludes rule-source files (`CLAUDE.md`, nested `*/CLAUDE.md`, `AGENTS.md`, `.claude/` rule includes); `STALE-PERMISSION` excludes `.claude/settings.json` and `.claude/settings.local.json`. Without these, the rule / declaration self-matches and the finding cannot fire.
   - **False-positive-evergreening via historical text**: both greps exclude docs (`*.md`, `*.rst`, `*.txt`), CHANGELOG / HISTORY, and `.harness/lessons-log.md` — prose mentions don't prove the identifier is still doing work. `STALE-PERMISSION` additionally scopes the grep to the execution surface (hooks, source roots, build manifests and their script entries, shell/ops scripts, CI/deploy configs) rather than "anywhere in the repo."
   - Tag renamed `STALE-REFERENCE` → `RULE-STALE` for consistency with glossary and output example.
-- **`review-task`** — INTENT-VIOLATION (Phase 1a) and DRIVE-BY (Phase 2a) findings require grep-verification before emit: named imports must match the actual text at the claimed `path:line`; drive-by files must actually appear in `git diff --name-only HEAD`.
+- **`review-task`** — Phase 0 now records `review_diff_range` (`HEAD` for uncommitted work, `HEAD~1..HEAD` or the user-specified range for committed work). INTENT-VIOLATION (Phase 1a) and DRIVE-BY (Phase 2a) findings require grep-verification before emit: named imports must match the actual text at the claimed `path:line`; drive-by files must actually appear in `git diff --name-only $review_diff_range`. Using the recorded range (rather than hardcoded `HEAD`) prevents false-verification when reviewing committed work with unrelated dirty edits in the working tree.
 - **`references/finding-tag-glossary.md`** — documents the new `scope-incomplete` annotation emitted by Phase 4 V4.
-- **`.gitignore`** — added `feedback.md` + `feedback-*.md` patterns; field-feedback working notes are source material, not shipped bundle content.
 
 ### Notes
 

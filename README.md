@@ -49,7 +49,7 @@ Nine skills organized by when they activate:
 |-------|------|
 | `extract-lesson` | End of a feature / after a fix: decide whether the learning becomes a structural defense, an architectural intent update, a rule in `CLAUDE.md`, a logged history entry, or nothing |
 
-Plus 8 reference documents, 2 templates, and 1 worked example in `references/`, `templates/`, and `examples/`.
+Plus 9 reference documents, 2 templates, and 1 worked example in `references/`, `templates/`, and `examples/`.
 
 ## What this is NOT
 
@@ -187,7 +187,7 @@ They don't depend on each other. If both are installed, Claude routes naturally 
 
 ## Status
 
-**v0.1.0 — beta.** All 9 skills are written and individually TDD-validated (baseline-vs-skill subagent scenarios). Each skill passed a cross-skill consistency pass against the prior set; contradictions surfaced during reviews were resolved before release. **Not yet validated in real-world projects** — that's the next step and the gate to v1.0.
+**v0.2.0 — beta.** All 9 skills are written and individually TDD-validated (baseline-vs-skill subagent scenarios). Each skill passed a cross-skill consistency pass against the prior set; contradictions surfaced during reviews were resolved before release. v0.2.0 incorporates the first real-world feedback pass (Orbito, 2026-04-21) as structural hardening — see `CHANGELOG.md` for the four error classes it closes and the scan-output-schema contract introduced to prevent regression. **Still pre-1.0**: one validation report is a signal, not a full gate; more real-world runs across varied stacks are the remaining path to v1.0.
 
 See `CHANGELOG.md` for what shipped. See `CONTRIBUTING.md` for development notes. See `references/finding-tag-glossary.md` if you want to understand the structured tags skills emit in their reports.
 

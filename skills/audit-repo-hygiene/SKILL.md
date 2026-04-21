@@ -40,9 +40,18 @@ If the user wants fixes applied, they start a separate session after reading the
 Detect:
 - **Project type**: doc-only (>80% markdown/txt/rst, no manifest) / code-only (<10% doc, has manifest) / mixed
 - **Primary language(s)** from file extensions
-- **Key files**: manifests (`package.json`, `requirements.txt`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `Cargo.toml`), config (`.env*`, `*.yaml`, `*.toml`), tests (`test*/`, `*_test.*`, `*.test.*`, `*.spec.*`)
+- **Key files**: manifests (any ecosystem manifest — `package.json`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `pom.xml`, `Gemfile`, `composer.json`, `deno.json`, etc.; the list is illustrative, treat any dep/build-declaring file as a manifest), config (`.env*`, `*.yaml`, `*.toml`), tests (`test*/`, `*_test.*`, `*.test.*`, `*.spec.*`)
 
-**Scope gate** — if `>500 files` (excluding `node_modules`, `.venv`, `vendor`, `dist`, `build`, `.git`) and no scope arg was given, ask the user:
+### Scope is reality-time, not author-time
+
+Before any dispatch, build two data structures and pass them to every scan agent. Author-time defaults (`src/`, `e2e/`, `tests/`, `node_modules`) are a floor, not the truth — real projects have non-standard layouts.
+
+1. **Ignore patterns** — read `.gitignore` and `.git/info/exclude`; merge with hard-coded defaults (`node_modules`, `.venv`, `vendor`, `dist`, `build`, `.git`). **No finding may target a path matching these patterns.** This kills the "X should be gitignored" false-positive class entirely.
+2. **Source roots** — do NOT assume `src/` is the only source root. Enumerate every directory that carries an ecosystem manifest (any dep/build-declaring file — examples in Phase 0 detection above; the list is not exhaustive — when a project uses an unfamiliar ecosystem, treat its manifest the same way). Honor workspace/monorepo files (`pnpm-workspace.yaml`, `go.work`, root `Cargo.toml` workspace table, `lerna.json`, `nx.json`, `turbo.json`, Gradle `settings.gradle*`, Maven reactor `pom.xml`, etc.) to expand the set. Record the union as the `source_roots` list. Every grep for imports, dep usage, or symbol references MUST iterate over `source_roots`, not hard-coded `src/`+`e2e/`. Full pattern + language-agnostic extension guidance: `../../references/scan-output-schema.md`.
+
+### Scope gate
+
+If `>500 files` (after applying the ignore patterns above) and no scope arg was given, ask the user:
 - (a) whole repo
 - (b) most recently modified 200 files (via `git log`) plus all doc files
 - (c) specific subdirectory
@@ -128,10 +137,22 @@ Skip code-side checks for doc-only repos; skip doc-side checks for code-only rep
 - Code comments referencing identifiers that no longer exist (reuse C5 data)
 - Flag: **COMMENT-ROT**
 
+## Phase 4 — Verification pass (mandatory, before emit)
+
+Scan agents produce findings; this phase turns them into truth. The **full contract** — line format, probe tables, neutralization rules — lives in `../../references/scan-output-schema.md`. Skill-level summary of what MUST run before any finding is emitted:
+
+- **V1. Identifier verification** — any finding with `identifier:<name>` at `path:line` requires a grep at `line ± 5`. No hit → drop the name (or the finding). *Why:* blocks correct-anchor + invented-name hallucinations.
+- **V2. Prescriptive-claim probes** — descriptors like "should be gitignored", "unused dep", "file/dir missing", "symbol not found" each require a reality probe (`git check-ignore`, cross-source-root grep, `test -e`, whole-repo grep). Probe passes → drop. *Why:* blocks scope-blind false positives against `.gitignore` and non-standard source roots.
+- **V3. Severity-language constraint** — charged adjectives (`retired`, `broken`, `deprecated`, `highest-impact`, etc.) require `evidence:<url|cmd-output>`. Missing evidence → neutralize the descriptor; severity is set by the aggregator, not the sub-agent. *Why:* blocks P0-inflation via editorial language.
+- **V4. Out-of-scope reality pass** — **P0 findings only**, only when the descriptor references a literal token (config key, env-var, model ID, port): run one unfiltered `grep -rn` across the whole repo. Extra hits → annotate `scope-incomplete` and list them. *Why:* catches drift the scoped scan couldn't see. Bounded to P0 to keep the cost of the one O(repo) probe controlled.
+
+Concrete probe tables, neutralization mappings, and the reference aggregator sketch are in the schema doc — don't duplicate them here.
+
 ## Efficiency rules
 
 - **Parallelism**: checks that share no scan results can be dispatched as parallel subagents. Independent: C4, C8, C11, C12, C13. Sequential required: C5 before C14 (share scan), C7 before C9 (share scan).
 - **Dispatched agents are scan-only**: any dispatched agent MUST return findings text only, never call `Edit`/`Write`/`Bash` that mutates the project. All output comes back to this skill for unified reporting.
+- **Structured output contract**: scan agents MUST emit findings in the line format from `../../references/scan-output-schema.md` — `[TAG] path:line — short-descriptor — identifier:<name?> evidence:<regex|cmd|url>`. Free-text narrative in the findings stream is banned; narrative goes in the aggregator's top-level summary only. This is what makes Phase 4 verification tractable.
 - **Truncation**: if a single check exceeds 50 findings, stop it early, report the first 50, note `truncated — N more found`.
 - **No scratch files in the project**: findings accumulate in conversation context. If context pressure becomes real on very large repos, dispatch each check to a separate subagent and have it return a summary (not raw findings) — this trades precision for context budget, which is the right trade at scale. **Never write a scratch/findings file into the user's project** — the audit is report-only and does not modify project files.
 
@@ -142,27 +163,37 @@ Skip code-side checks for doc-only repos; skip doc-side checks for code-only rep
 **Date:** <YYYY-MM-DD>
 **Scope:** <whole / recent-200 / subdir / diff>
 **Scanned:** <N> files | **Type:** <doc-only / code-only / mixed>
+**Source roots:** <detected list> | **Ignore patterns:** .gitignore + defaults
 
 ### 🔴 High signal (P0)
-- [BROKEN-REF] docs/setup.md:42 — link to `docs/install.md` (not found); rename candidate: `docs/installation.md`
-- [CONFLICT] config.yaml:5 + retry.ts:18 — MAX_RETRY differs (3 vs 5)
+- [BROKEN-REF] docs/setup.md:42 — link to `docs/install.md` — identifier:`docs/install.md` evidence:`test -e` → missing; rename candidate: `docs/installation.md`
+- [CONFLICT] config.yaml:5 + retry.ts:18 — MAX_RETRY differs (3 vs 5) — evidence:`grep -n MAX_RETRY`
+- [CONFLICT] deploy/.env.production:14 — AI_MODEL differs from CHANGELOG-documented value — evidence:CHANGELOG.en-US.md:74 [scope-incomplete: also present in CONTRIBUTING.md:104, docs/ops/infrastructure.md:176]
 
 ### 🟡 Medium signal (P1)
-- [DEAD-CODE] utils/legacy.ts — `parseOldFormat` has 0 references; not in do-not-touch set
-- [UNUSED-DEP] package.json — `chalk` has 0 imports in src/
-- [DRIFT] README.md:15-22 — directory tree shows `src/utils/` but actual path is `lib/utils/`
+- [DEAD-CODE] utils/legacy.ts:12 — identifier:`parseOldFormat` evidence:`grep -rn 'parseOldFormat'` → 0 refs outside definition; not in do-not-touch set
+- [UNUSED-DEP] package.json — identifier:`chalk` evidence:`grep -rn 'chalk'` across source_roots → 0 imports
+- [DRIFT] README.md:15-22 — directory tree references `src/utils/` evidence:`test -e src/utils` → missing; actual path is `lib/utils/`
 
 ### 🟢 Low signal (P2)
-- [BLOAT] src/api/handler.ts — 680 lines, max nesting 6
+- [BLOAT] src/api/handler.ts — 680 lines, max nesting 6 — evidence:`wc -l` + AST
 - [TEST-SHALLOW] tests/api.test.ts — 78% mock setup, avg 1.2 assertions per test
 
 ### Summary
-| Priority | Found |
-|----------|-------|
-| P0 | N |
-| P1 | N |
-| P2 | N |
+| Priority | Found | Verified | Dropped in Phase 4 |
+|----------|-------|----------|---------------------|
+| P0 | N | N | N |
+| P1 | N | N | N |
+| P2 | N | N | N |
+
+Dropped categories (top causes):
+- identifier not found at claimed location: N
+- path already gitignored: N
+- dep imported in non-standard source root: N
+- charged adjective without evidence: N
 ```
+
+The `identifier:` and `evidence:` fields are part of the emit contract, not optional decoration — see `../../references/scan-output-schema.md`. The Dropped-categories block exists so the user can see what the verification pass caught; silently dropping findings would obscure quality regressions.
 
 ## Anti-patterns
 
@@ -173,6 +204,9 @@ Skip code-side checks for doc-only repos; skip doc-side checks for code-only rep
 | Skipping do-not-touch set for dead-code detection | Framework convention paths and package.json `exports` are NOT dead; never flag for removal. |
 | Collapsing audit + fix into one session | Keep separate. The review pass is a Layer 5 defense. |
 | Auto-editing files in dispatched subagents | Dispatched agents are scan-only; edits only happen in explicit follow-up work. |
+| Skipping Phase 4 verification | V1–V4 are mandatory before emit. The four failure classes this skill was hardened against are all verification-pass-absent failures. |
+| Flagging paths already covered by `.gitignore` | Phase 0 reads `.gitignore`; findings targeting ignored paths MUST be filtered before emit. |
+| Grepping only `src/`+`e2e/` for unused deps | Phase 0 detects all source roots (every dir with a manifest, plus workspace entries); V2 iterates over the detected set. |
 
 ## When NOT to use
 

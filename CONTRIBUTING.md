@@ -1,6 +1,6 @@
 # Contributing to harness-steward
 
-Thanks for considering a contribution. This bundle is early-stage (v0.1.0 beta); the highest-value contributions right now are **real-world validation reports** and **skill bug reports** from actual projects using it.
+Thanks for considering a contribution. This bundle is early-stage (v0.2.0 beta); the highest-value contributions right now are **real-world validation reports** and **skill bug reports** from actual projects using it. The 2026-04-21 Orbito report is the model — reproducible `grep` evidence let the fix be structural (see `CHANGELOG.md [0.2.0]` and `references/scan-output-schema.md`).
 
 ## How it was built
 
@@ -39,7 +39,7 @@ If you've run this bundle on a real project (even just one feature end-to-end), 
 - Where a skill's output felt right vs. wrong
 - Any friction you noticed (descriptions that mismatched the moment, false negatives, duplicated work across skills)
 
-This is the gate between v0.1.0 (beta) and v1.0 (stable). Subagent TDD catches obvious wrongness; only real use catches the subtle kind.
+This is the gate between the current v0.x beta line and v1.0 (stable). Subagent TDD catches obvious wrongness; only real use catches the subtle kind — v0.2.0 proved the point.
 
 ## Skill bug reports
 
@@ -79,4 +79,4 @@ We'll add a formal `.harness/` sediment directory to this repo in a future relea
 
 ## Versioning
 
-Semver. The bundle is at 0.1.0 (beta) until real-world validation on at least one external project proves the design works. 1.0 signifies "stable enough to recommend broadly."
+Semver. The bundle is at 0.2.0 (beta). 0.1.0 was the initial skill bundle; 0.2.0 folded in the first field-feedback hardening pass (four verifiable error classes closed, scan-output-schema contract added). 1.0 signifies "stable enough to recommend broadly" and is gated on additional real-world validation across varied stacks.

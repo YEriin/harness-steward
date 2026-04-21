@@ -1,6 +1,6 @@
 {
   "name": "harness-steward",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Project-level AI coding discipline for Claude Code and Codex. Nine skills that activate at key development moments and consult project-specific sediment to keep work aligned.",
   "author": {
     "name": "YEriin",

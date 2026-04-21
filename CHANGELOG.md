@@ -2,6 +2,38 @@
 
 All notable changes to the `harness-steward` bundle will be documented here. This project follows [semver](https://semver.org/).
 
+## [0.2.0] - 2026-04-21
+
+### Changed
+
+First real-world feedback pass on `audit-repo-hygiene` (Orbito, 1,138-file mixed Go+TS+Markdown repo) surfaced four verifiable error classes across one production run:
+
+1. **Identifier fabrication on correct anchors** — `path:line` accurate, named symbol invented (e.g., `SeedCRM` reported at a line where the real function was `seedSampleData`; "14 `ValidationError` types" where the true count was 6)
+2. **Severity inflation via charged adjectives** — `retired`, `broken`, `highest-impact` attached without evidence
+3. **Scope-blind false positives** — hard-coded exclusions missed `.gitignore`'d paths and non-standard source roots (e.g., deps flagged "unused" because the scan never looked at `<project>/ux-eval/`)
+4. **Recall gap on P0 config literals** — token sweeps stopped at the first scoped match; drift in CHANGELOG / CONTRIBUTING / doc trees went undetected
+
+Each mapped to one of two structural gaps — no post-scan verification pass, scope-is-author-time — and is now closed by:
+
+- **New reference** `references/scan-output-schema.md` — contract for scan-only dispatched agents. Line format `[TAG] path:line — descriptor — identifier:<name?> evidence:<regex|cmd|url>`, plus aggregator-side verification steps V1 (identifier grep-verification at `line ± 5`), V2 (prescriptive-claim probes: `git check-ignore`, `test -e`, cross-source-root dep grep), V3 (severity-language constraint — charged adjectives require evidence or get neutralized; severity is set by the aggregator, never by the sub-agent), V4 (unfiltered whole-repo sweep, **bounded to P0 literal-referencing findings**). V2 probe table is pattern-first with illustrative examples; language-agnostic extension guidance included. Manifest detection is ecosystem-agnostic — Java/Maven, Gradle, Ruby, PHP, Elixir, Julia, Deno, Bun, Haskell, OCaml, Crystal, .NET all appear as examples, list is explicitly non-exhaustive.
+- **`audit-repo-hygiene`** — Phase 0 now reads `.gitignore` + `.git/info/exclude` and detects source roots dynamically from every directory carrying an ecosystem manifest (honors `pnpm-workspace.yaml`, `go.work`, Cargo workspace, `lerna.json`, `nx.json`, `turbo.json`, Gradle `settings.gradle*`, Maven reactor). New Phase 4 — Verification pass (V1–V4) executes before any finding is emitted. Output format carries `identifier:` + `evidence:` fields and a Dropped-categories summary so verification catches are visible. Phase 4 body kept compact in the skill (bullets: pattern + why); full tables live in the schema reference to avoid duplication.
+- **`audit-harness`** — Check 1b (rule staleness) and Checks 4a/4b (dead-hook, stale-permission) now carry self-contained verification rules with scoped greps that avoid two symmetric failure modes:
+  - **Self-match**: `RULE-STALE` excludes rule-source files (`CLAUDE.md`, nested `*/CLAUDE.md`, `AGENTS.md`, `.claude/` rule includes); `STALE-PERMISSION` excludes `.claude/settings.json` and `.claude/settings.local.json`. Without these, the rule / declaration self-matches and the finding cannot fire.
+  - **False-positive-evergreening via historical text**: both greps exclude docs (`*.md`, `*.rst`, `*.txt`), CHANGELOG / HISTORY, and `.harness/lessons-log.md` — prose mentions don't prove the identifier is still doing work. `STALE-PERMISSION` additionally scopes the grep to the execution surface (hooks, source roots, build manifests and their script entries, shell/ops scripts, CI/deploy configs) rather than "anywhere in the repo."
+  - Tag renamed `STALE-REFERENCE` → `RULE-STALE` for consistency with glossary and output example.
+- **`review-task`** — INTENT-VIOLATION (Phase 1a) and DRIVE-BY (Phase 2a) findings require grep-verification before emit: named imports must match the actual text at the claimed `path:line`; drive-by files must actually appear in `git diff --name-only HEAD`.
+- **`references/finding-tag-glossary.md`** — documents the new `scope-incomplete` annotation emitted by Phase 4 V4.
+- **`.gitignore`** — added `feedback.md` + `feedback-*.md` patterns; field-feedback working notes are source material, not shipped bundle content.
+
+### Notes
+
+User-visible changes for skill consumers:
+- `audit-repo-hygiene` output now carries `identifier:` + `evidence:` fields and a Dropped-categories block. Any downstream parser that treated findings as free text will ignore the new fields; parsers that want to use the structure should read `references/scan-output-schema.md`.
+- `scope-incomplete` is a new annotation (not a tag) that may appear on P0 findings.
+- `STALE-REFERENCE` was renamed to `RULE-STALE` — the old name was only introduced in this same change set and had no prior emitters, so no migration is needed.
+
+`.harness/` sediment format, CLAUDE.md rules, and the report-only policy are unchanged. Real-world validation credit: the reporter surfaced every class with reproducible `grep` evidence, which is what made structural rather than behavioral fixes tractable.
+
 ## [0.1.0] - 2026-04-20
 
 Initial beta release. Nine skills across four categories: setup, workflow (ambient activation at common dev moments — evaluate-requirement, scope-implementation, review-task, debug-with-history), periodic macro audit, and lesson capture. Not yet validated in real-world projects — treat as beta until that happens.
@@ -46,7 +78,7 @@ Initial beta release. Nine skills across four categories: setup, workflow (ambie
 
 - Not yet validated in real-world projects beyond subagent-level TDD; treat as beta
 - Only one worked example (Node.js web service); no Python / Go / Rust / doc-only examples yet
-- No `audit-this-bundle` meta-skill yet (planned for v0.2)
+- No `audit-this-bundle` meta-skill yet (now targeted for v0.3; v0.2 prioritized the field-feedback fix set)
 
 ### Development process
 

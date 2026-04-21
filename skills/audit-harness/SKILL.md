@@ -32,9 +32,17 @@ Count total rules. The minimal-template baseline is **11 universal rules across 
 - `> 25 rules` — HIGH DILUTION, GC strongly recommended before other work
 
 ### 1b. Staleness
-For each rule that names a file, function, module, config key:
-- Use Grep/Glob to verify the referenced identifier exists
-- Not found → flag **STALE-REFERENCE**
+For each rule that names a file, function, module, or config key, the goal is to confirm the identifier still exists **in the live codebase / config**, not merely that some text anywhere in the repo mentions it. Two scopes MUST be excluded from the grep for different reasons:
+
+- **Rule-source files** (`CLAUDE.md`, nested `*/CLAUDE.md`, `AGENTS.md`, `.claude/` rule includes) — excluded because the rule text itself contains the identifier; without this exclusion every rule self-matches and `RULE-STALE` cannot fire.
+- **Non-load-bearing text** — docs (`*.md`, `*.rst`, `*.txt`, including README, `docs/**`, `CHANGELOG*`, `HISTORY*`), the append-only lessons log (`.harness/lessons-log.md`), and `.git/`. A mention in migration docs, a changelog entry, or a lesson write-up does **not** prove the code still uses the identifier — those surfaces record history, not current behavior. Without this exclusion, long-dead identifiers stay "evergreen" forever.
+
+Procedure:
+- Grep the identifier across the project minus the two exclusion scopes above
+- Found in the remaining surface (code, config, build, hooks, CI, templates) → rule is current; do not flag
+- Not found → flag **RULE-STALE**
+
+A rule that mentions `OldService.parse()` is stale when a grep restricted to the live code/config surface returns nothing — even if CHANGELOG or lessons-log still reference the name. Code-comment mentions inside otherwise-live code files will also count as a hit (treat them as a soft signal; a follow-up `COMMENT-ROT` audit is `audit-repo-hygiene`'s job, not this one's).
 
 ### 1c. Vagueness
 Rules of the form *"be more careful with X"*, *"try to avoid Y"*, *"consider Z"*, *"prefer A over B when appropriate"* → flag **VAGUE** (no concrete action = no testable compliance = worthless rule).
@@ -87,8 +95,29 @@ Read `.claude/settings.json` (or equivalent):
 ### 4a. Dead hook references
 Hooks referencing scripts/commands that don't exist on disk / aren't on PATH → flag **DEAD-HOOK**.
 
+Before flagging, run `test -e <script>` for file paths or `command -v <cmd>` for PATH items. Anything that resolves is not dead.
+
 ### 4b. Stale permissions
 Permission rules granting access to tools, paths, or commands the project no longer uses → flag **STALE-PERMISSION**.
+
+"Still used" means the tool / path is actually **invoked somewhere that runs**, not that the name appears in prose. Grep the tool name / path across the **execution surface** only:
+
+- Hook scripts (`.claude/hooks/**`, `.githooks/**`, `.husky/**`)
+- Source code across detected `source_roots`
+- Build / task manifests and their script entries (`package.json` scripts block, `Makefile`, `justfile`, `Taskfile*.yml`, `noxfile.py`, `tox.ini`, `pyproject.toml` `[tool.*]` script tables)
+- Shell / ops scripts (`*.sh`, `*.bash`, `*.zsh`, `scripts/**`, `bin/**`, `tools/**`)
+- CI / deploy configs (`.github/workflows/**`, `.gitlab-ci.yml`, `.circleci/**`, `azure-pipelines*.yml`, `Dockerfile*`, `docker-compose*.yml`)
+
+Exclude always:
+- The settings file(s) themselves (`.claude/settings.json`, `.claude/settings.local.json`, any equivalent permission-declaring file) — excluded because the declaration self-matches; without this, `STALE-PERMISSION` can never fire.
+- Docs, README, CHANGELOG, HISTORY, `.harness/lessons-log.md`, `.git/` — a tool mentioned in prose is not the same as a tool being invoked.
+
+Procedure:
+- Grep the tool name / path across the execution surface above, with exclusions applied
+- Any hit → permission is still load-bearing; do not flag
+- No hit → flag **STALE-PERMISSION**
+
+This is stricter than the previous "anywhere in the repo" rule: a permission whose only remaining mentions are in historical docs should be flagged, because those mentions don't prove the permission is still doing work.
 
 ### 4c. Local skills
 For any project-local skills defined in `.claude/skills/` or similar: verify their referenced files/paths still exist. Don't audit their logic — that's out of scope.

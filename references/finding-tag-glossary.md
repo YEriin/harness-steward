@@ -9,6 +9,9 @@ Centralized reference for the structured tags emitted by harness skill findings.
 - `-MANIFESTATION` suffix indicates a dynamic/symptomatic signal (evidence suggesting a problem exists) rather than a static/structural detection of the problem itself
 - Verb-noun or noun-state structure
 
+**Annotations** (not tags — modifiers on an existing finding):
+- `scope-incomplete` — a P0 finding references a literal token (config key, env-var, model ID, port) whose unfiltered whole-repo grep hit files the scan never visited. The annotation carries the enumerated extra locations. Emitted by `audit-repo-hygiene` Phase 4 V4; contract defined in `scan-output-schema.md`.
+
 ---
 
 ## Architectural-intent boundaries

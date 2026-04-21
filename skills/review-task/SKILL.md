@@ -36,10 +36,12 @@ This skill is **report-only**. It does not auto-fix, does not block commits, doe
 
 ## Phase 0 — Scope the review
 
-Read the diff:
+Read the diff. Record the exact selection as `review_diff_range` — later phases refer back to it:
 
-- Prefer `git diff HEAD` (includes staged + unstaged) if the change is uncommitted
-- If already committed, `git diff HEAD~1 HEAD` for the latest commit, or the commit range the user specifies
+- If the change is uncommitted → `review_diff_range = "HEAD"` (so `git diff HEAD` covers staged + unstaged)
+- If the change is already committed → `review_diff_range = "HEAD~1..HEAD"` for just the latest commit, or whatever commit range the user specifies
+
+All downstream `git diff --name-only` / `git diff` probes MUST use `$review_diff_range` — not a re-hardcoded `HEAD`. Otherwise a "review HEAD~1..HEAD" session with dirty working-tree changes would check DRIVE-BY claims against the wrong file set.
 
 Identify:
 - **Files touched** — group by module/directory
@@ -56,6 +58,8 @@ Read `.harness/architectural-intent.md`. For the modules touched by the diff:
 For each Key Abstraction in architectural-intent, look at the "does not know about" clause:
 - Did the diff introduce an import, call, or reference that crosses a stated boundary?
 - Example: architectural-intent says *"Job does not know about HTTP"*; diff imports from `http/` inside `jobs/scheduler.ts` → flag **INTENT-VIOLATION**
+
+When the finding names a specific symbol at a `path:line`, grep-verify the symbol is actually there (±5 lines) before emit. Generated-plausible import names are the failure mode to prevent.
 
 ### 1b. New abstractions not in intent
 Did the diff introduce a new top-level concept (new module, new exported class, new cross-cutting pattern) that isn't named in architectural-intent's key-abstractions list?
@@ -74,6 +78,8 @@ These checks apply per-task (not repo-wide as in `audit-repo-hygiene`):
 Does the diff include changes to files/modules unrelated to the stated task?
 - Cross-reference task scope (Phase 0) with files touched
 - Flag **DRIVE-BY** for unrelated changes (tightens "Only do what was asked" rule)
+
+Before flagging, confirm the cited file appears in `git diff --name-only $review_diff_range` (the range recorded in Phase 0). A drive-by claim against a file not in that diff set is a hallucination, not a signal. Do not hardcode `HEAD` — a reviewer running against `HEAD~1..HEAD` while the working tree has unrelated dirty edits would otherwise false-verify.
 
 ### 2b. Evidence attachment
 If the AI claimed "tests pass", "fix verified", "works" — did the user see verification output in the current session?
